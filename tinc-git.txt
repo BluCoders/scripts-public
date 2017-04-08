@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -e
+
+# Prereq: https://github.com/BluCoders/scripts-public/blob/master/installtinc
+
+git clone https://github.com/BluCoders/scripts-public.git
+cd scripts-public
+./installtinc
+mkdir /etc/tinc && cd /etc/tinc
+useradd -d /etc/tinc -s /bin/bash tinc
+chown tinc:root /etc/tinc -R
+su tinc
+# Cont'd as tinc in /etc/tinc
+ssh-keygen -t ed25519
+echo "---------------------"
+echo "Give this to BluCoders to give you access to the internal repo"
+cat .ssh/id_ed25519.pub
+echo "If you want to push to the repo, give your normal sshkey too"
+
+# Permit access to update
+echo 'command="cd bluvpn; git pull; ./scripts/gen_tincconf" ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDLn8B66nG5Lylr5ETH+EMNUusDlq7iHaSA7zwudoJ6lDyMMVD7yMQKjYlXkwz3jllPUgcBhtec2hiw0Z5Iqn4cns9/OlU4Kjwu9S7mYpkP9UYaOujUWJ5yRbEvOWZyTzXbemn2mX5PDyEDMsip/IhlJ0i839GuH8rtYYRgSe7eAy91BIt7BRzFitNIJFjDGqHaWlmLzPA8bA6cCo1znfKtVOyQn7gXQUS7ANxLgz69V7dp2AMxzndhem/ztCidqTgGGoSHRoZW1/4h3o24gtSnyCPrC+wxCelIc/+CHWD7iwf7IwOdOLLlobKwp9z57r2o8Ni0Ovsru+8LfehUWvlGwwY4S8QaOTbOBuB9l4cdNrYgZYWlXKVs5LhccrHgn89E6acY5bXTkWG9hW8lx5mOXUb8MWBJ+tly/LNNqjeAJ3yca5R75mAz2hex2rnEEC7gUv3bKsxzu2iRuugabXjrZwJuIyl89454JU3kCr3zkgssZoS8KHHSzwKtUIWTTub+R+3737PqboRdA0AUxXbrD3px5ViP4zAlUTwR+8Ehnzx0vaEhWFnJaBQSRzFF695Z7CYwvrpNF7QGmeX+c87lq6/wolr7Eg1qltuCNBczIz1fPpH/lVK634PiQl8FXwAeWHCgEkkGSUp9AHaqcdLvOSzyWWrDHR2q+1Z7hpSf9Q== git@hermes.hawken.vpn' > .ssh/authorized_keys
+chmod 600 .ssh/authorized_keys
+
+# Pull the repo now
+git clone git@thehawken.org:tinc.git bluvpn
+
+echo "Continue in bluvpn/README.md"
