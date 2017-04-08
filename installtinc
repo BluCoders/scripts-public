@@ -1,0 +1,49 @@
+#!/bin/bash
+if [ `whoami` != "root" ]; then
+	echo "Must be root"
+	exit 1
+fi
+set -e
+
+apt-get install -y git autoconf gcc libncurses-dev libreadline-dev zlib1g-dev liblzo2-dev libssl-dev make texinfo
+
+cd /usr/src
+if [ -d "tinc" ]; then
+	cd tinc
+	git pull
+	git clean -fxd
+else
+	git clone git://tinc-vpn.org/tinc -b 1.1
+	cd tinc
+fi
+autoreconf -i
+./configure --prefix=/usr/local --sysconfdir=/etc
+make -j9
+make install
+
+if [ -d '/lib/systemd/system' ]; then
+	echo "Using systemd"
+	cat > /lib/systemd/system/tinc@.service << EOF
+[Unit]
+Description=Tinc daemon, network %I
+
+[Service]
+Type=simple
+# Maybe -s to force syslog. Otherwise consult systemd for logs
+# ask nicely... or something
+ExecStart=/usr/local/sbin/tincd -D -n %I
+
+# No detach: systemctl can just kill directly
+#ExecStop=/usr/local/sbin/tinc -n %I stop
+Restart=on-failure
+
+[Install]
+WantedBy=network.target
+EOF
+	systemctl enable tinc@bluvpn.service
+	echo "Use systemctl start tinc@bluvpn.service to start. Enabled at boot"
+else
+	echo "Don't know how your init system works. Start tinc this way:"
+	echo "Inirectly:   tinc -n bluvpn start"
+	echo "Directly:    tincd -n bluvpn"
+fi
